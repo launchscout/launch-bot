@@ -3,7 +3,7 @@ import Config
 # Configure your database
 config :live_state_comments, LiveStateComments.Repo,
   username: "postgres",
-  password: "postgres",
+  password: "0psv0033",
   hostname: "localhost",
   database: "live_state_comments_dev",
   stacktrace: true,

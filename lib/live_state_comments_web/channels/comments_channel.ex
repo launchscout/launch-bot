@@ -14,12 +14,21 @@ defmodule LiveStateCommentsWeb.CommentsChannel do
     {:ok, %{comments: Comments.list_comments(url), url: url}}
   end
 
+
   @impl true
   def handle_event("add_comment", comment_params, %{comments: comments} = state) do
     case Comments.create_comment(comment_params) do
       {:ok, comment} ->
-        new_state = Map.put(state, :comments, comments ++ [comment])
-        {:reply, [%Event{name: "comment_added", detail: comment}], new_state}
+        case MyApp.OpenAI.chat_with_openai(comments, comment.text) do
+          {:ok, response} ->
+            {:ok, ai_comment} = Comments.create_comment(%{text: Enum.at(response["choices"], 0)["message"]["content"], author: "Assistant", url: comment.url})
+            new_state = Map.put(state, :comments, comments ++ [comment, ai_comment])
+            {:reply, [%Event{name: "comment_added", detail: comment}, %Event{name: "comment_added", detail: ai_comment}], new_state}
+
+          {:error, _error} ->
+            IO.puts("Error communicating with OpenAI API")
+            {:reply, [%Event{name: "comment_added", detail: comment}], state}
+        end
     end
   end
 

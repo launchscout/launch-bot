@@ -51,7 +51,9 @@ defmodule LiveStateComments.MixProject do
       {:plug_cowboy, "~> 2.5"},
       {:live_state, "~> 0.3.0"},
       {:cors_plug, "~> 3.0"},
-      {:hackney, "~> 1.18"}
+      {:hackney, "~> 1.18"},
+      {:httpoison, "~> 2.1"},
+      {:poison, "~> 5.0"}
     ]
   end
 
