@@ -1,7 +1,6 @@
 # LaunchBotServer
 
-This is a demo project for [`live_state`](https://github.com/gaslight/live_state). It's designed to
-be the "back end" of this [repo](https://github.com/gaslight/livestate-comments) which contains the custom element with will interact with CommentsChannel.
+This is based off of Chris Nelson's [live_state_comments](https://github.com/launchscout/live_state_comments) repo
 
 ## Usage
 
@@ -16,3 +15,7 @@ mix phx.server
 ```
 
 You can get you OpenAI API key [here](https://platform.openai.com/account/api-keys).
+
+The front end of this app is [here](https://github.com/launchscout/livestate-comments)
+
+You will need to make some changes to this above repo to get it to work with this one.  In the `index.html` file, you will need to change the `url` attribute of the `livestate-comments` tag to point to your server. There is also an issue with the input html tag, which needs to be changed to an text-area tag.
