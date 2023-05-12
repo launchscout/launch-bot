@@ -104,6 +104,11 @@ defmodule LiveStateComments.Comments do
     Repo.delete(comment)
   end
 
+
+  def delete_all_comments(url) do
+    from(c in Comment, where: c.url == ^url) |> Repo.delete_all()
+  end
+
   @doc """
   Returns an `%Ecto.Changeset{}` for tracking comment changes.
 

@@ -15,15 +15,30 @@ defmodule MyApp.OpenAI do
       "messages" => transform_state(state, message),
     })
 
-    case HTTPoison.post(@api_url, body, headers) do
-      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        {:ok, Poison.decode!(body)}
+    options = [recv_timeout: 30_000]
 
-      {:ok, %HTTPoison.Response{status_code: status_code, body: body}} ->
-        {:error, %{status_code: status_code, body: Poison.decode!(body)}}
+    case HTTPoison.post(@api_url, body, headers, options) do
+      {:ok, %HTTPoison.Response{status_code: 200, body: res}} ->
+        case Poison.decode(res) do
+          {:ok, decoded} ->
+            {:ok, decoded}
+          {:error, reason} ->
+            {:error, %{reason: "Failed to decode response: #{reason}"}}
+        end
+
+      {:ok, %HTTPoison.Response{status_code: status_code, body: res}} ->
+        case Poison.decode(res) do
+          {:ok, decoded} ->
+            {:error, %{status_code: status_code, body: decoded}}
+          {:error, reason} ->
+            {:error, %{reason: "Failed to decode error response: #{reason}"}}
+        end
 
       {:error, %HTTPoison.Error{reason: reason}} ->
         {:error, %{reason: reason}}
+
+      _ ->
+        {:error, %{reason: "Unexpected error"}}
     end
   end
 
@@ -31,10 +46,18 @@ defmodule MyApp.OpenAI do
     state
     |> Enum.map(fn comment ->
       %{
-        "role" => (comment.author == "assistant" && "assistant") || "user",
+        "role" => determine_role(comment.author),
         "content" => comment.text
       }
     end)
     |> List.insert_at(-1, %{"role" => "user", "content" => current_string})
+  end
+
+  def determine_role(author) do
+    if author == "assistant" do
+      "assistant"
+    else
+      "user"
+    end
   end
 end

@@ -21,12 +21,14 @@ defmodule LiveStateCommentsWeb.CommentsChannel do
       {:ok, comment} ->
         case MyApp.OpenAI.chat_with_openai(comments, comment.text) do
           {:ok, response} ->
-            {:ok, ai_comment} = Comments.create_comment(%{text: Enum.at(response["choices"], 0)["message"]["content"], author: "Assistant", url: comment.url})
+            {:ok, ai_comment} = Comments.create_comment(%{text: Enum.at(response["choices"], 0)["message"]["content"], author: "assistant", url: comment.url})
+            IO.inspect(ai_comment)
             new_state = Map.put(state, :comments, comments ++ [comment, ai_comment])
             {:reply, [%Event{name: "comment_added", detail: comment}, %Event{name: "comment_added", detail: ai_comment}], new_state}
 
           {:error, _error} ->
-            IO.puts("Error communicating with OpenAI API")
+            #print the error to the console
+            IO.inspect(_error)
             {:reply, [%Event{name: "comment_added", detail: comment}], state}
         end
     end
@@ -35,5 +37,16 @@ defmodule LiveStateCommentsWeb.CommentsChannel do
   @impl true
   def handle_message({:comment_created, _comment}, state) do
     {:noreply, state |> Map.put(:comments, Comments.list_comments(state.url))}
+  end
+
+
+  @impl true
+  #mehtod that deletes all comments when a button is clicked
+  def handle_event("delete_all_comments", _params, %{comments: comments} = state) do
+    comments
+    |> Enum.map(fn comment ->
+      Comments.delete_comment(comment)
+    end)
+    {:reply, [%Event{name: "all_comments_deleted"}], Map.put(state, :comments, [])}
   end
 end
